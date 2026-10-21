@@ -1,54 +1,64 @@
-#!/usr/bin/env sh
-set -eu
-usage() {
-  echo "Usage: sh scripts/install.sh --harness opencode|claude|codex --target PATH [--force]" >&2
-}
-harness="" target="" force=0
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --harness) [ "$#" -ge 2 ] || { usage; exit 2; }; harness=$2; shift 2;;
-    --target) [ "$#" -ge 2 ] || { usage; exit 2; }; target=$2; shift 2;;
-    --force) force=1; shift;;
-    *) usage; exit 2;;
-  esac
+#!/usr/bin/env bash
+set -euo pipefail
+usage(){ echo 'Usage: install.sh --harness opencode|claude|codex --target DIR [--action install|update|uninstall] [--dry-run]' >&2; }
+harness='' target='' action='install' dry=0
+while (($#)); do
+ case "$1" in
+ --harness|--target|--action) (($#>=2)) || { usage; exit 2; }; case "$1" in --harness) harness=$2;; --target) target=$2;; --action) action=$2;; esac; shift 2;;
+ --dry-run) dry=1; shift;; *) usage; exit 2;; esac
 done
-[ -n "$target" ] && [ -n "$harness" ] || { usage; exit 2; }
-case "$harness" in opencode|claude|codex) ;; *) usage; exit 2;; esac
-[ -d "$target" ] || { echo "Target directory does not exist: $target" >&2; exit 2; }
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-root=$(CDPATH= cd -- "$script_dir/.." && pwd)
-copy_file() {
-  src=$1 dest=$2
-  [ -f "$src" ] || { echo "Missing source: $src" >&2; exit 1; }
-  if [ -e "$dest" ] && [ "$force" -ne 1 ]; then
-    echo "Refusing to overwrite: $dest (use --force)" >&2
-    exit 1
-  fi
-  mkdir -p "$(dirname "$dest")"
-  cp "$src" "$dest"
-  echo "Installed: $dest"
-}
-# Portable directory copy: copy files one by one so overwrites are explicit.
-copy_dir() {
-  src=$1 dest=$2
-  [ -d "$src" ] || { echo "Missing source directory: $src" >&2; exit 1; }
-  find "$src" -type f | while IFS= read -r file; do
-    rel=${file#"$src"/}
-    copy_file "$file" "$dest/$rel"
-  done
-}
+[[ $harness == opencode || $harness == claude || $harness == codex ]] || { usage; exit 2; }
+[[ $action == install || $action == update || $action == uninstall ]] || { usage; exit 2; }
+[[ -d $target && ! -L $target ]] || { echo 'Target directory does not exist' >&2; exit 2; }
+target=$(cd "$target" && pwd -P)
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+command -v sha256sum >/dev/null || { echo 'sha256sum required' >&2; exit 2; }
+manifest="$target/.jvm-migration/$harness.manifest"
+declare -a sources=() dests=() hashes=() previous_paths=() previous_hashes=()
+map_dir(){ local src=$1 prefix=$2 file rel; [[ -d $root/$src ]] || { echo "Missing source $src" >&2; exit 2; }; while IFS= read -r -d '' file; do rel=${file#"$root/$src/"}; sources+=("$file"); dests+=("$prefix/$rel"); hashes+=("$(sha256sum "$file" | cut -d' ' -f1)"); done < <(find "$root/$src" -type f -print0 | sort -z); }
 case "$harness" in
-  opencode)
-    copy_dir "$root/skills/jvm-spark-migration" "$target/.opencode/skills/jvm-spark-migration"
-    copy_dir "$root/commands" "$target/.opencode/commands"
-    ;;
-  claude)
-    copy_dir "$root/.claude/skills/jvm-spark-migration" "$target/.claude/skills/jvm-spark-migration"
-    copy_dir "$root/.claude/commands" "$target/.claude/commands"
-    copy_dir "$root/.claude/agents" "$target/.claude/agents"
-    ;;
-  codex)
-    copy_dir "$root/.agents/skills/jvm-spark-migration" "$target/.agents/skills/jvm-spark-migration"
-    ;;
+ opencode) map_dir skills/jvm-spark-migration .opencode/skills/jvm-spark-migration; map_dir commands .opencode/commands;;
+ claude) map_dir .claude/skills/jvm-spark-migration .claude/skills/jvm-spark-migration; map_dir .claude/commands .claude/commands; map_dir .claude/agents .claude/agents;;
+ codex) map_dir .agents/skills/jvm-spark-migration .agents/skills/jvm-spark-migration;;
 esac
-echo "Installation complete for $harness. Verify discovery in the selected CLI."
+if [[ -f $manifest ]]; then
+ while IFS=$'\t' read -r hash path; do [[ $hash =~ ^[a-f0-9]{64}$ && $path != /* && $path != *'..'* ]] || { echo 'Invalid manifest' >&2; exit 2; }; previous_hashes+=("$hash"); previous_paths+=("$path"); done < "$manifest"
+fi
+old_hash(){ local i; REPLY=''; for i in "${!previous_paths[@]}"; do if [[ ${previous_paths[i]} == "$1" ]]; then REPLY=${previous_hashes[i]}; return; fi; done; }
+conflict=0
+for i in "${!dests[@]}"; do
+ path=${dests[i]}; [[ ! -L $target/$path ]] || { echo "Symlink conflict: $path" >&2; conflict=1; continue; }
+ old_hash "$path"; old=$REPLY
+ if [[ -e $target/$path ]]; then
+  actual=$(sha256sum "$target/$path" | cut -d' ' -f1)
+  if [[ -z $old || $actual != "$old" ]]; then echo "Conflict (unmanaged or modified): $path" >&2; conflict=1; fi
+ elif [[ -n $old && $action == update ]]; then echo "Conflict (locally deleted): $path" >&2; conflict=1
+ fi
+done
+if [[ $action == install && -f $manifest ]]; then echo 'Already installed: use --action update' >&2; conflict=1; fi
+if [[ $action != install && ! -f $manifest ]]; then echo 'No installation manifest' >&2; conflict=1; fi
+if [[ $action == uninstall || $action == update ]]; then
+ for i in "${!previous_paths[@]}"; do
+  path=${previous_paths[i]}; [[ -f $target/$path && ! -L $target/$path ]] && actual=$(sha256sum "$target/$path" | cut -d' ' -f1) || actual='MISSING'
+  if [[ $actual != "${previous_hashes[i]}" ]]; then echo "Conflict (modified or missing): $path" >&2; conflict=1; fi
+ done
+fi
+((conflict==0)) || { echo 'Aborted before writing any file.' >&2; exit 3; }
+if ((dry)); then
+ echo "DRY RUN: $action for $harness at $target"
+ for path in "${dests[@]}"; do [[ $action == uninstall ]] || echo "Would install: $path"; done
+ if [[ $action == uninstall ]]; then for path in "${previous_paths[@]}"; do echo "Would remove: $path"; done; fi
+ exit 0
+fi
+mkdir -p "$(dirname "$manifest")"
+if [[ $action == uninstall ]]; then
+ for path in "${previous_paths[@]}"; do rm -- "$target/$path"; done
+ rm -- "$manifest"; echo "Uninstalled $harness"; exit 0
+fi
+if [[ $action == update ]]; then
+ for path in "${previous_paths[@]}"; do found=0; for current in "${dests[@]}"; do [[ $path == "$current" ]] && found=1; done; ((found)) || rm -- "$target/$path"; done
+fi
+for i in "${!dests[@]}"; do mkdir -p "$(dirname "$target/${dests[i]}")"; cp -- "${sources[i]}" "$target/${dests[i]}"; done
+: > "$manifest"
+for i in "${!dests[@]}"; do printf '%s\t%s\n' "${hashes[i]}" "${dests[i]}" >> "$manifest"; done
+echo "$action complete for $harness"
