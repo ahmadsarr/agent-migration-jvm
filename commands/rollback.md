@@ -1,0 +1,2 @@
+# /migration:rollback
+Prepare a safe rollback plan covering commits, dependency/runtime images, CI and Spark state. Explain data/checkpoint compatibility. Never execute rollback or destructive actions without explicit confirmation.
