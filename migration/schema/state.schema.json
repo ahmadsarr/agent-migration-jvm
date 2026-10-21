@@ -63,7 +63,11 @@
           "acceptance",
           "report",
           "evidence",
-          "authorization"
+          "authorization",
+          "objective",
+          "preconditions",
+          "actions",
+          "rollback"
         ],
         "properties": {
           "id": {
@@ -167,8 +171,66 @@
               }
             },
             "additionalProperties": false
+          },
+          "objective": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preconditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "rollback": {
+            "type": "string",
+            "minLength": 1
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "COMPLETED"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "report": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "acceptance": {
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "const": "PASS"
+                      }
+                    },
+                    "required": [
+                      "result"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }
