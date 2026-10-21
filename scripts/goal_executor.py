@@ -49,6 +49,7 @@ def inspect(root, state):
                 raise Blocked("Missing dependency: " + dep)
         if g.get("status") == "COMPLETED":
             verify_completed(root, g)
+            verify_dependencies_and_authorization(g, by_id)
     return by_id
 
 
@@ -59,10 +60,21 @@ def verify_completed(root, goal):
     report = inside(root, goal.get("report"))
     if not report.is_file() or not report.stat().st_size:
         raise Blocked(goal["id"] + ": persisted report missing or empty")
-    for item in goal.get("evidence", []):
+    evidence_paths = list(goal.get("evidence", []))
+    for check in checks:
+        if check.get("evidence") is not None:
+            evidence_paths.append(check["evidence"])
+    for item in evidence_paths:
         evidence = inside(root, item)
         if not evidence.is_file():
             raise Blocked(goal["id"] + ": evidence missing: " + item)
+
+
+def verify_dependencies_and_authorization(goal, goals):
+    if any(goals[dep]["status"] != "COMPLETED" for dep in goal["dependencies"]):
+        raise Blocked(goal["id"] + ": dependencies not complete")
+    if goal.get("authorization", {}).get("reportWrite") is not True:
+        raise Blocked(goal["id"] + ": report persistence not authorized")
 
 
 def complete(root, state, goal_id):
@@ -74,10 +86,7 @@ def complete(root, state, goal_id):
         return False
     if goal["status"] not in ("VALIDATING", "READY"):
         raise Blocked("Goal must be VALIDATING or READY")
-    if any(goals[dep]["status"] != "COMPLETED" for dep in goal["dependencies"]):
-        raise Blocked("Dependencies not complete")
-    if not goal.get("authorization", {}).get("reportWrite"):
-        raise Blocked("Report persistence not authorized")
+    verify_dependencies_and_authorization(goal, goals)
     verify_completed(root, goal)
     goal["status"] = "COMPLETED"
     return True
