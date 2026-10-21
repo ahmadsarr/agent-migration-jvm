@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JVM Migration State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "repository",
+    "baseline",
+    "goals"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "head"
+      ],
+      "properties": {
+        "head": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "baseline": {
+      "type": "object",
+      "properties": {
+        "jdk": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "jdk",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stage",
+          "status",
+          "dependencies",
+          "acceptance",
+          "report",
+          "evidence",
+          "authorization"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^GOAL-[0-9]{3}$"
+          },
+          "stage": {
+            "enum": [
+              "audit",
+              "decide",
+              "plan",
+              "apply",
+              "validate"
+            ]
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "READY",
+              "RUNNING",
+              "VALIDATING",
+              "COMPLETED",
+              "BLOCKED",
+              "FAILED",
+              "WAITING_APPROVAL"
+            ]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "acceptance": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "criterion",
+                "result"
+              ],
+              "properties": {
+                "criterion": {
+                  "type": "string"
+                },
+                "result": {
+                  "enum": [
+                    "PASS",
+                    "FAIL",
+                    "NOT_RUN"
+                  ]
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "report": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authorization": {
+            "type": "object",
+            "required": [
+              "reportWrite",
+              "sourceEdit",
+              "riskyTests",
+              "deploy"
+            ],
+            "properties": {
+              "reportWrite": {
+                "type": "boolean"
+              },
+              "sourceEdit": {
+                "type": "boolean"
+              },
+              "riskyTests": {
+                "type": "boolean"
+              },
+              "deploy": {
+                "type": "boolean"
+              },
+              "approvalReference": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  }
+}
