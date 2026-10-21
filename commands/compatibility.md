@@ -1,0 +1,2 @@
+# /migration:compatibility
+Using audit results, compare candidate JDK targets against the exact Spark/Scala versions, build plugins and connectors. Cite official version-specific compatibility sources. Separate blockers, risks and unknowns. Recommend a target only with sufficient evidence.
