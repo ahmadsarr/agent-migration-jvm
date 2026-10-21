@@ -1,0 +1,2 @@
+# /migration:validate
+Compare target JDK results with Java 11 baseline. Run relevant build, unit/integration tests, Spark jobs, streaming checkpoint restart, connector/serialization checks, and performance comparisons. Distinguish executed checks from proposed checks. Produce evidence-based Go/No-Go.
