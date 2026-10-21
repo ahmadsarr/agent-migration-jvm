@@ -21,6 +21,16 @@ migration/
 4. **Apply**: implement only a specifically approved batch on a dedicated branch.
 5. **Validate**: compare against Java 11 baseline and record evidence-backed Go/No-Go.
 
+For batches affecting critical dependencies or JDK-sensitive behavior, use the
+[targeted regression workflow](../skills/jvm-spark-migration/references/targeted-regressions.md).
+The plan goal records the impact/coverage map and missing tests. Add approved tests
+before the dependency update when possible, capture the baseline, then run equivalent
+checks on the migrated batch. The validation goal links the resulting report and
+per-criterion evidence arrays; missing mandatory runs remain NOT_RUN. Existing
+checkpoint files are not migrated automatically: add batch-specific criteria during
+authorized planning. The template includes starter criteria, which must be made
+specific to the actual project before execution.
+
 ## State and safety
 - Before each run, compare `repository.head` and branch against Git, inspect report files and referenced evidence. A mismatch is a **reconciliation request**, never silent trust or silent overwrite.
 - A goal becomes COMPLETED only when all criteria are PASS and its report exists in an authorized durable destination.

@@ -4,6 +4,11 @@ on:
     paths:
       - 'scripts/install.sh'
       - 'tests/**'
+      - 'skills/**'
+      - '.agents/skills/**'
+      - '.claude/skills/**'
+      - 'commands/**'
+      - '.claude/commands/**'
       - '.github/workflows/harness-installer.yml'
   workflow_dispatch:
 jobs:
