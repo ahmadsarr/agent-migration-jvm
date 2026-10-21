@@ -34,3 +34,6 @@ Use [goal protocol](references/goal-protocol.md) and [report template](reference
 ## Orchestration checkpoint
 Use the state schema and target layout in [migration orchestration](../../migration/README.md). Treat `migration/state.json` as a checkpoint, not as authoritative evidence. Before advancing a goal, reconcile recorded Git head/branch, report persistence, acceptance checks and evidence with the actual repository. Stop and report divergence rather than silently advancing.
 Execute goals in order: audit -> decide -> plan -> apply -> validate. Report writing is separately authorized from source edits. Do not apply an unapproved batch, and do not mark a goal COMPLETED before its report is durably stored and every criterion is PASS. Do not claim autonomous execution unless an actual executor has run and passed its tests.
+
+## Harness provisioning boundary
+Harness installation, update and uninstall are **manual operator tasks**. Never invoke `scripts/install.sh` or alter harness configuration as an agent action. Only work after the operator has installed and selected the harness. Do not treat an approval to run migration goals as permission to manage harness files.
