@@ -60,14 +60,16 @@ def verify_completed(root, goal):
     report = inside(root, goal.get("report"))
     if not report.is_file() or not report.stat().st_size:
         raise Blocked(goal["id"] + ": persisted report missing or empty")
-    evidence_paths = list(goal.get("evidence", []))
+    evidence_groups = [goal.get("evidence", [])]
     for check in checks:
-        if check.get("evidence") is not None:
-            evidence_paths.append(check["evidence"])
-    for item in evidence_paths:
-        evidence = inside(root, item)
-        if not evidence.is_file():
-            raise Blocked(goal["id"] + ": evidence missing: " + item)
+        evidence_groups.append(check.get("evidence", []))
+    for group in evidence_groups:
+        if not isinstance(group, list):
+            raise Blocked(goal["id"] + ": evidence must be an array of paths")
+        for item in group:
+            evidence = inside(root, item)
+            if not evidence.is_file():
+                raise Blocked(goal["id"] + ": evidence missing: " + item)
 
 
 def verify_dependencies_and_authorization(goal, goals):

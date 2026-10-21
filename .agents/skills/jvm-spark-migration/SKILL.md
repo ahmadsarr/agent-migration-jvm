@@ -20,6 +20,15 @@ Use this skill when migrating an existing Java 11 Spark/Scala application to a s
 - **Apply**: one approved batch on a separate branch, no unrelated edits.
 - **Validate**: regression tests, integration, streaming recovery, performance and Go/No-Go.
 Use [validation reference](references/validation.md) for acceptance criteria.
+## Targeted regression coverage
+For each migration batch affecting critical dependencies or JDK-sensitive behavior,
+use [targeted regressions](references/targeted-regressions.md). Trace actual usages,
+inspect existing coverage and add or extend tests only for identified behavioral
+gaps within the approved scope. Capture equivalent baseline and target results,
+then persist the impact map and evidence using the
+[regression report template](references/regression-report-template.md).
+Missing mandatory runs and unresolved critical risks prevent Go; compilation alone
+cannot close the validation goal. Preserve the evidence-array checkpoint format.
 ## Outputs
 Persist reports to an explicitly authorized report destination (dedicated reports directory or external artifact store). Do not write to the audited repository during a read-only audit unless that destination has been separately authorized. Always distinguish observed facts, documented support and assumptions.
 

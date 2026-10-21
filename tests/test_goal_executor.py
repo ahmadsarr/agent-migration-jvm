@@ -61,12 +61,12 @@ class GoalExecutorTest(unittest.TestCase):
 
 
     def test_missing_criterion_evidence(self):
-        self.goal["acceptance"][0]["evidence"] = "migration/evidence/missing.txt"
+        self.goal["acceptance"][0]["evidence"] = ["migration/evidence/missing.txt"]
         with self.assertRaises(Blocked):
             complete(self.root, self.state, "GOAL-001")
 
     def test_criterion_evidence_escape(self):
-        self.goal["acceptance"][0]["evidence"] = "../outside.txt"
+        self.goal["acceptance"][0]["evidence"] = ["../outside.txt"]
         with self.assertRaises(Blocked):
             complete(self.root, self.state, "GOAL-001")
 
@@ -74,8 +74,45 @@ class GoalExecutorTest(unittest.TestCase):
         p = self.root / "migration/evidence/proof.txt"
         p.parent.mkdir(parents=True)
         p.write_text("verified")
-        self.goal["acceptance"][0]["evidence"] = "migration/evidence/proof.txt"
+        self.goal["acceptance"][0]["evidence"] = ["migration/evidence/proof.txt"]
         self.assertTrue(complete(self.root, self.state, "GOAL-001"))
+        inspect(self.root, self.state)
+
+    def test_empty_criterion_evidence_array(self):
+        self.goal["acceptance"][0]["evidence"] = []
+        self.assertTrue(complete(self.root, self.state, "GOAL-001"))
+
+    def test_all_evidence_entries_are_checked(self):
+        proof = self.root / "migration/evidence/proof.txt"
+        proof.parent.mkdir(parents=True)
+        proof.write_text("verified")
+        self.goal["evidence"] = ["migration/evidence/proof.txt"]
+        self.goal["acceptance"][0]["evidence"] = [
+            "migration/evidence/proof.txt", "migration/evidence/missing.txt"
+        ]
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+        self.assertEqual(self.goal["status"], "VALIDATING")
+
+    def test_non_array_evidence_rejected(self):
+        for container in (self.goal, self.goal["acceptance"][0]):
+            for value in (self.goal["report"], None, {}, True):
+                with self.subTest(container=container, value=value):
+                    container["evidence"] = value
+                    with self.assertRaises(Blocked):
+                        complete(self.root, self.state, "GOAL-001")
+                    self.assertEqual(self.goal["status"], "VALIDATING")
+            container["evidence"] = []
+
+    def test_criterion_evidence_symlink_escape(self):
+        with tempfile.TemporaryDirectory() as outside:
+            proof = Path(outside) / "proof.txt"
+            proof.write_text("outside")
+            link = self.root / "migration/evidence"
+            link.symlink_to(Path(outside), target_is_directory=True)
+            self.goal["acceptance"][0]["evidence"] = ["migration/evidence/proof.txt"]
+            with self.assertRaises(Blocked):
+                complete(self.root, self.state, "GOAL-001")
 
     def test_string_false_not_authorized(self):
         self.goal["authorization"]["reportWrite"] = "false"

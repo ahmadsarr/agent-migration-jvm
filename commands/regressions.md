@@ -1,0 +1,4 @@
+# /migration:regressions
+Use the installed jvm-spark-migration skill and its `references/targeted-regressions.md` workflow.
+For the selected JVM migration batch, trace changed critical dependencies and JDK-sensitive usages to application behavior. Inspect existing assertions and fixtures, reuse sufficient tests, and propose only the missing regression tests. With authorization, implement them using the project's test framework and run equivalent checks on Java 11/source dependencies and the supported target JDK/migrated dependencies.
+Preserve explicit application contracts; do not assert incidental ordering or other unspecified behavior. Record exact environments, selected and executed tests, results and evidence using `references/regression-report-template.md`. Persist only to an authorized destination. Missing runs are NOT_RUN and unresolved critical gaps prevent a Go decision. Keep checkpoint evidence as arrays and follow the skill's completion gates.

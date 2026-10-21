@@ -1,2 +1,3 @@
 # /migration:validate
 Compare target JDK results with Java 11 baseline. Run relevant build, unit/integration tests, Spark jobs, streaming checkpoint restart, connector/serialization checks, and performance comparisons. Distinguish executed checks from proposed checks. Produce evidence-based Go/No-Go.
+For each critical risk in the batch's targeted regression report, verify the selected test actually ran with equivalent fixtures and assertions in both environments. Require execution evidence, investigate differences and retain NOT_RUN for missing runs. Unresolved critical gaps prevent Go; checkpoint evidence fields remain arrays.

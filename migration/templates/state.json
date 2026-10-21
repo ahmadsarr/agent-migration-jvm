@@ -66,7 +66,13 @@
       "dependencies": [
         "GOAL-002"
       ],
-      "acceptance": [],
+      "acceptance": [
+        {
+          "criterion": "For this batch, persist an impact/coverage map with selected existing tests, justified additions and baseline/target execution requirements; document any conclusion that no critical impact was found",
+          "result": "NOT_RUN",
+          "evidence": []
+        }
+      ],
       "report": null,
       "evidence": [],
       "authorization": {
@@ -81,7 +87,8 @@
         "Compatibility decision available"
       ],
       "actions": [
-        "Specify scope, tests and rollback per batch"
+        "Specify scope, tests and rollback per batch",
+        "Map actual critical dependency/JDK impacts to application contracts, existing coverage and only the missing tests"
       ],
       "rollback": "Revert plan document if needed"
     },
@@ -107,7 +114,8 @@
         "Approval reference recorded for batch"
       ],
       "actions": [
-        "Apply approved changes on a dedicated feature branch"
+        "Add approved missing regression tests on a dedicated feature branch in a separate commit and capture baseline results before the dependency update where possible",
+        "Apply approved migration changes on the dedicated feature branch"
       ],
       "rollback": "Revert approved batch commit after authorization"
     },
@@ -118,7 +126,13 @@
       "dependencies": [
         "GOAL-004"
       ],
-      "acceptance": [],
+      "acceptance": [
+        {
+          "criterion": "Every identified critical behavioral risk is covered by equivalent executed baseline/target checks with evidence; report differences and unresolved gaps, or substantiate that no critical impact was found",
+          "result": "NOT_RUN",
+          "evidence": []
+        }
+      ],
       "report": null,
       "evidence": [],
       "authorization": {
