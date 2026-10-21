@@ -23,7 +23,15 @@
         "riskyTests": false,
         "deploy": false,
         "approvalReference": null
-      }
+      },
+      "objective": "Inventory JVM, Spark, Scala and runtime versions with evidence",
+      "preconditions": [
+        "Repository is accessible"
+      ],
+      "actions": [
+        "Inspect build files, CI and runtime configuration without source edits"
+      ],
+      "rollback": "No source changes; restore report only if explicitly authorized"
     },
     {
       "id": "GOAL-002",
@@ -41,7 +49,15 @@
         "riskyTests": false,
         "deploy": false,
         "approvalReference": null
-      }
+      },
+      "objective": "Evaluate supported JDK targets against Spark and Scala compatibility",
+      "preconditions": [
+        "Audit evidence available"
+      ],
+      "actions": [
+        "Document compatibility constraints and authoritative sources"
+      ],
+      "rollback": "Revert decision document if needed"
     },
     {
       "id": "GOAL-003",
@@ -59,7 +75,15 @@
         "riskyTests": false,
         "deploy": false,
         "approvalReference": null
-      }
+      },
+      "objective": "Define reversible migration batches and acceptance gates",
+      "preconditions": [
+        "Compatibility decision available"
+      ],
+      "actions": [
+        "Specify scope, tests and rollback per batch"
+      ],
+      "rollback": "Revert plan document if needed"
     },
     {
       "id": "GOAL-004",
@@ -77,7 +101,15 @@
         "riskyTests": false,
         "deploy": false,
         "approvalReference": null
-      }
+      },
+      "objective": "Implement only an explicitly approved migration batch",
+      "preconditions": [
+        "Approval reference recorded for batch"
+      ],
+      "actions": [
+        "Apply approved changes on a dedicated feature branch"
+      ],
+      "rollback": "Revert approved batch commit after authorization"
     },
     {
       "id": "GOAL-005",
@@ -95,7 +127,15 @@
         "riskyTests": false,
         "deploy": false,
         "approvalReference": null
-      }
+      },
+      "objective": "Compare migrated behavior with Java 11 baseline",
+      "preconditions": [
+        "Baseline and implemented batch available"
+      ],
+      "actions": [
+        "Run authorized tests and document evidence-backed Go/No-Go"
+      ],
+      "rollback": "Restore prior runtime configuration after authorization"
     }
   ]
 }
