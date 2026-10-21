@@ -23,3 +23,10 @@ No runtime schema validation, no concurrent locking, no cryptographic evidence v
 
 ## Next
 Run tests, review security and semantics, then request approval before merging.
+
+## P2 review fixes
+- Criterion-level `acceptance[].evidence` is verified with the same project-local file checks as goal-level evidence.
+- Every previously completed goal is rechecked for direct dependency completion and explicit report-write authorization. This catches transitive incomplete chains during inspection.
+- `reportWrite` must be the literal JSON boolean `true`; truthy strings are rejected.
+- Added regression tests for missing/outside criterion evidence, valid criterion evidence, completed-goal authorization, transitive dependencies and string authorization.
+- **Test execution remains NOT RUN** pending CI results.
