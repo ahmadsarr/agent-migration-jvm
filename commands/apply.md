@@ -1,0 +1,2 @@
+# /migration:apply
+Require an approved plan batch and a dedicated branch. Show intended diffs before changing code. Make only approved changes; never overwrite unrelated edits. Record results and stop on failures.
