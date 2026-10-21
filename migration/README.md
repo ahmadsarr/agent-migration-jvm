@@ -32,3 +32,6 @@ migration/
 
 ## Canonical source and harness adapters
 The canonical skill is `skills/jvm-spark-migration/SKILL.md`. Harness copies must be generated or checked against it. Harness-specific commands and agents may add tool invocation syntax but must not change goal semantics or approval gates.
+
+## Manual provisioning boundary
+The operator must install or update harness integrations manually, outside agent execution, using `scripts/install.sh`. A migration goal never grants permission for an agent to run the installer or change its own harness configuration. See the repository root README for operator commands.
