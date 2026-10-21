@@ -22,3 +22,11 @@ Use this skill when migrating an existing Java 11 Spark/Scala application to a s
 Use [validation reference](references/validation.md) for acceptance criteria.
 ## Outputs
 Create or update assessment, plan and validation reports in the target repository only when approved. Always distinguish observed facts, documented support and assumptions.
+
+## Goal-driven execution contract
+A migration is a directed sequence of measurable goals. Each goal must declare: stable ID, objective, dependencies, preconditions, authorized actions, verifiable acceptance criteria, evidence, report path, rollback and approval gate.
+State transitions: PENDING -> READY -> RUNNING -> VALIDATING -> COMPLETED. Other states: BLOCKED, FAILED, WAITING_APPROVAL. Only mark COMPLETED after all acceptance criteria pass AND the report is persisted.
+At the start of each run, inspect prior reports and Git history, reconcile state, and select the next READY goal. Never blindly repeat destructive operations. Keep automation within authorized scope; request approval for edits, risky tests, merge, deployment and rollback.
+Every attempted goal MUST generate a Markdown report, including failures and blockers, containing: goal ID, objective, status, environment, actions, changed files, executed commands and results, acceptance checks, evidence links, risks, next goal and PR URL if any. Mark unexecuted checks NOT RUN. If persistence fails, mark BLOCKED and retain the report for recovery. Do not fabricate results.
+For repository changes, create a dedicated branch and reviewable PR with its report. Do not merge without explicit approval. A technical goal passing does not imply PR approval.
+Use [goal protocol](references/goal-protocol.md) and [report template](references/report-template.md). Generate a final consolidated migration report only when all required goals and approval gates are satisfied.
