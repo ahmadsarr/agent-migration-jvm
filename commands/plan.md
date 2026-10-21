@@ -1,0 +1,2 @@
+# /migration:plan
+Prepare incremental reversible migration batches. For each: rationale, prerequisite, affected files, risk, acceptance tests, rollback and approval gate. Keep dependency upgrades distinct from functional refactors.
