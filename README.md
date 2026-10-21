@@ -9,6 +9,6 @@ Toolkit for planning and validating migrations from Java 11 to a compatible targ
 4. Apply only approved changes.
 5. Validate tests, Spark streaming recovery, performance and deployment.
 
-See `skills/jvm-spark-migration/SKILL.md` and `commands/`.
+Canonical skill: `skills/jvm-spark-migration/SKILL.md` (mirrored for Codex and Claude Code). All copies share the goal execution and mandatory reporting contract. See `commands/` for generic templates and `.claude/commands/` for Claude-specific commands.
 
 Command files are prompt templates; slash-command registration depends on the coding assistant.
