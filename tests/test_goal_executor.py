@@ -60,5 +60,42 @@ class GoalExecutorTest(unittest.TestCase):
             complete(self.root, self.state, "GOAL-001")
 
 
+    def test_missing_criterion_evidence(self):
+        self.goal["acceptance"][0]["evidence"] = "migration/evidence/missing.txt"
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_criterion_evidence_escape(self):
+        self.goal["acceptance"][0]["evidence"] = "../outside.txt"
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_criterion_evidence_exists(self):
+        p = self.root / "migration/evidence/proof.txt"
+        p.parent.mkdir(parents=True)
+        p.write_text("verified")
+        self.goal["acceptance"][0]["evidence"] = "migration/evidence/proof.txt"
+        self.assertTrue(complete(self.root, self.state, "GOAL-001"))
+
+    def test_string_false_not_authorized(self):
+        self.goal["authorization"]["reportWrite"] = "false"
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_completed_goal_without_authorization_rejected_on_inspect(self):
+        self.goal["status"] = "COMPLETED"
+        self.goal["authorization"]["reportWrite"] = False
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
+    def test_transitive_incomplete_dependency_rejected(self):
+        first = {"id": "GOAL-001", "status": "PENDING", "dependencies": []}
+        second = dict(self.goal, id="GOAL-002", status="COMPLETED", dependencies=["GOAL-001"])
+        third = dict(self.goal, id="GOAL-003", status="VALIDATING", dependencies=["GOAL-002"])
+        self.state["goals"] = [first, second, third]
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-003")
+
+
 if __name__ == "__main__":
     unittest.main()
