@@ -1,0 +1,22 @@
+name: Harness installer checks
+on:
+  pull_request:
+    paths:
+      - 'scripts/install.sh'
+      - 'tests/**'
+      - '.github/workflows/harness-installer.yml'
+  workflow_dispatch:
+jobs:
+  shell-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        run: bash -n scripts/install.sh tests/install-test.sh
+      - name: Installer lifecycle tests
+        run: bash tests/install-test.sh
+      - name: ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          shellcheck scripts/install.sh tests/install-test.sh
