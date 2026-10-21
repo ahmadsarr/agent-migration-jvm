@@ -23,3 +23,10 @@ This MR defines the contract, **not an autonomous orchestrator**. State transiti
 
 ## Next
 Review contract and implement executor only after this MR is approved and merged.
+
+## P2 review corrections
+- JSON Schema now requires nonempty `report`, nonempty `acceptance` and only PASS results whenever `status=COMPLETED` (conditional `if/then`).
+- Each goal now requires durable `objective`, `preconditions`, `actions` and `rollback` fields.
+- The five sample goals in the state template now provide these fields.
+- **Runtime report existence and evidence validity remain executor responsibilities.**
+- **Schema test execution: NOT RUN**; the changes are structural and still need validation against positive and negative fixtures.
