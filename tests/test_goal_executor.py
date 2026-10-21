@@ -1,0 +1,64 @@
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+from scripts.goal_executor import Blocked, complete, inspect
+
+
+class GoalExecutorTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "-c", "user.name=Test", "-c",
+                        "user.email=test@example.org", "commit", "-q", "--allow-empty", "-m", "init"], check=True)
+        self.head = subprocess.check_output(["git", "-C", str(self.root), "rev-parse", "HEAD"], text=True).strip()
+        self.branch = subprocess.check_output(["git", "-C", str(self.root), "branch", "--show-current"], text=True).strip()
+        self.goal = {"id": "GOAL-001", "status": "VALIDATING", "dependencies": [],
+                     "acceptance": [{"criterion": "inventory", "result": "PASS"}],
+                     "report": "migration/reports/GOAL-001.md", "evidence": [],
+                     "authorization": {"reportWrite": True}}
+        self.state = {"schemaVersion": 1, "repository": {"head": self.head, "branch": self.branch},
+                      "goals": [self.goal]}
+        report = self.root / self.goal["report"]
+        report.parent.mkdir(parents=True)
+        report.write_text("# Inventory\n")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_success(self):
+        self.assertTrue(complete(self.root, self.state, "GOAL-001"))
+        self.assertEqual(self.goal["status"], "COMPLETED")
+        inspect(self.root, self.state)
+
+    def test_failed_check(self):
+        self.goal["acceptance"][0]["result"] = "FAIL"
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_missing_report(self):
+        (self.root / self.goal["report"]).unlink()
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_no_authorization(self):
+        self.goal["authorization"]["reportWrite"] = False
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_git_divergence(self):
+        self.state["repository"]["head"] = "wrong"
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
+    def test_path_escape(self):
+        self.goal["report"] = "../outside.md"
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+
+if __name__ == "__main__":
+    unittest.main()
