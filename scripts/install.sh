@@ -14,6 +14,16 @@ target=$(cd "$target" && pwd -P)
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 command -v sha256sum >/dev/null || { echo 'sha256sum required' >&2; exit 2; }
 manifest="$target/.jvm-migration/$harness.manifest"
+check_ancestors() {
+  local path="$target" component
+  local -a parts
+  IFS='/' read -r -a parts <<< "$1"
+  for component in "${parts[@]}"; do
+    path="$path/$component"
+    if [[ -L "$path" ]]; then echo "Symlink conflict: $path" >&2; return 1; fi
+  done
+}
+
 declare -a sources=() dests=() hashes=() previous_paths=() previous_hashes=()
 map_dir(){ local src=$1 prefix=$2 file rel; [[ -d $root/$src ]] || { echo "Missing source $src" >&2; exit 2; }; while IFS= read -r -d '' file; do rel=${file#"$root/$src/"}; sources+=("$file"); dests+=("$prefix/$rel"); hashes+=("$(sha256sum "$file" | cut -d' ' -f1)"); done < <(find "$root/$src" -type f -print0 | sort -z); }
 case "$harness" in
@@ -27,7 +37,7 @@ fi
 old_hash(){ local i; REPLY=''; for i in "${!previous_paths[@]}"; do if [[ ${previous_paths[i]} == "$1" ]]; then REPLY=${previous_hashes[i]}; return; fi; done; }
 conflict=0
 for i in "${!dests[@]}"; do
- path=${dests[i]}; [[ ! -L $target/$path ]] || { echo "Symlink conflict: $path" >&2; conflict=1; continue; }
+ path=${dests[i]}; check_ancestors "$path" || { conflict=1; continue; }; [[ ! -L $target/$path ]] || { echo "Symlink conflict: $path" >&2; conflict=1; continue; }
  old_hash "$path"; old=$REPLY
  if [[ -e $target/$path ]]; then
   actual=$(sha256sum "$target/$path" | cut -d' ' -f1)
@@ -35,11 +45,12 @@ for i in "${!dests[@]}"; do
  elif [[ -n $old && $action == update ]]; then echo "Conflict (locally deleted): $path" >&2; conflict=1
  fi
 done
+check_ancestors ".jvm-migration/$harness.manifest" || conflict=1
 if [[ $action == install && -f $manifest ]]; then echo 'Already installed: use --action update' >&2; conflict=1; fi
 if [[ $action != install && ! -f $manifest ]]; then echo 'No installation manifest' >&2; conflict=1; fi
 if [[ $action == uninstall || $action == update ]]; then
  for i in "${!previous_paths[@]}"; do
-  path=${previous_paths[i]}; [[ -f $target/$path && ! -L $target/$path ]] && actual=$(sha256sum "$target/$path" | cut -d' ' -f1) || actual='MISSING'
+  path=${previous_paths[i]}; check_ancestors "$path" || { conflict=1; continue; }; [[ -f $target/$path && ! -L $target/$path ]] && actual=$(sha256sum "$target/$path" | cut -d' ' -f1) || actual='MISSING'
   if [[ $actual != "${previous_hashes[i]}" ]]; then echo "Conflict (modified or missing): $path" >&2; conflict=1; fi
  done
 fi
@@ -50,10 +61,43 @@ if ((dry)); then
  if [[ $action == uninstall ]]; then for path in "${previous_paths[@]}"; do echo "Would remove: $path"; done; fi
  exit 0
 fi
+backup=$(mktemp -d)
+committed=0
+rollback() {
+  local code=$? path
+  trap - EXIT INT TERM
+  if ((committed==0)); then
+    for path in "${dests[@]}" "${previous_paths[@]}"; do
+      if [[ -f "$backup/old/$path" ]]; then
+        mkdir -p "$(dirname "$target/$path")"
+        cp -- "$backup/old/$path" "$target/$path" || true
+      else
+        rm -f -- "$target/$path" || true
+      fi
+    done
+    if [[ -f "$backup/manifest" ]]; then
+      cp -- "$backup/manifest" "$manifest" || true
+    else
+      rm -f -- "$manifest" || true
+    fi
+  fi
+  rm -rf -- "$backup"
+  exit "$code"
+}
+trap rollback EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+for path in "${dests[@]}" "${previous_paths[@]}"; do
+  if [[ -f "$target/$path" && ! -f "$backup/old/$path" ]]; then
+    mkdir -p "$(dirname "$backup/old/$path")"
+    cp -- "$target/$path" "$backup/old/$path"
+  fi
+done
+[[ ! -f "$manifest" ]] || cp -- "$manifest" "$backup/manifest"
 mkdir -p "$(dirname "$manifest")"
 if [[ $action == uninstall ]]; then
  for path in "${previous_paths[@]}"; do rm -- "$target/$path"; done
- rm -- "$manifest"; echo "Uninstalled $harness"; exit 0
+ rm -- "$manifest"; committed=1; echo "Uninstalled $harness"; exit 0
 fi
 if [[ $action == update ]]; then
  for path in "${previous_paths[@]}"; do found=0; for current in "${dests[@]}"; do [[ $path == "$current" ]] && found=1; done; ((found)) || rm -- "$target/$path"; done
@@ -61,4 +105,5 @@ fi
 for i in "${!dests[@]}"; do mkdir -p "$(dirname "$target/${dests[i]}")"; cp -- "${sources[i]}" "$target/${dests[i]}"; done
 : > "$manifest"
 for i in "${!dests[@]}"; do printf '%s\t%s\n' "${hashes[i]}" "${dests[i]}" >> "$manifest"; done
+committed=1
 echo "$action complete for $harness"
