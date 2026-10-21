@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "repository": {
+    "head": "REPLACE_WITH_GIT_SHA",
+    "branch": "REPLACE_WITH_BRANCH"
+  },
+  "baseline": {
+    "jdk": null,
+    "evidence": []
+  },
+  "goals": [
+    {
+      "id": "GOAL-001",
+      "stage": "audit",
+      "status": "PENDING",
+      "dependencies": [],
+      "acceptance": [],
+      "report": null,
+      "evidence": [],
+      "authorization": {
+        "reportWrite": false,
+        "sourceEdit": false,
+        "riskyTests": false,
+        "deploy": false,
+        "approvalReference": null
+      }
+    },
+    {
+      "id": "GOAL-002",
+      "stage": "decide",
+      "status": "PENDING",
+      "dependencies": [
+        "GOAL-001"
+      ],
+      "acceptance": [],
+      "report": null,
+      "evidence": [],
+      "authorization": {
+        "reportWrite": false,
+        "sourceEdit": false,
+        "riskyTests": false,
+        "deploy": false,
+        "approvalReference": null
+      }
+    },
+    {
+      "id": "GOAL-003",
+      "stage": "plan",
+      "status": "PENDING",
+      "dependencies": [
+        "GOAL-002"
+      ],
+      "acceptance": [],
+      "report": null,
+      "evidence": [],
+      "authorization": {
+        "reportWrite": false,
+        "sourceEdit": false,
+        "riskyTests": false,
+        "deploy": false,
+        "approvalReference": null
+      }
+    },
+    {
+      "id": "GOAL-004",
+      "stage": "apply",
+      "status": "PENDING",
+      "dependencies": [
+        "GOAL-003"
+      ],
+      "acceptance": [],
+      "report": null,
+      "evidence": [],
+      "authorization": {
+        "reportWrite": false,
+        "sourceEdit": false,
+        "riskyTests": false,
+        "deploy": false,
+        "approvalReference": null
+      }
+    },
+    {
+      "id": "GOAL-005",
+      "stage": "validate",
+      "status": "PENDING",
+      "dependencies": [
+        "GOAL-004"
+      ],
+      "acceptance": [],
+      "report": null,
+      "evidence": [],
+      "authorization": {
+        "reportWrite": false,
+        "sourceEdit": false,
+        "riskyTests": false,
+        "deploy": false,
+        "approvalReference": null
+      }
+    }
+  ]
+}
