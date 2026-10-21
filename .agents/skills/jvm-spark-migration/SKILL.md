@@ -10,7 +10,7 @@ Use this skill when migrating an existing Java 11 Spark/Scala application to a s
 3. Read [compatibility reference](references/compatibility.md) and verify exact versions against official documentation. Do not treat a candidate JDK as supported until proven.
 4. Establish a Java 11 baseline: build, tests, representative Spark batch/streaming workloads, latency, throughput, memory, GC and restart behavior where applicable.
 5. Separate Java runtime upgrade, Spark/Scala upgrades, connector upgrades and unrelated refactoring into independent changes.
-6. Use read-only inspection before proposing changes. Obtain explicit approval before edits, running risky tests, production actions or rollback.
+6. Use read-only inspection before proposing changes. Source/project edits, risky tests, production actions and rollback require explicit approval. Writing a report to an authorized report destination is a separate permission and does not count as modifying audited source files.
 7. Review checkpoint compatibility, serialization, Spark driver/executor versions and Kafka delivery semantics where applicable.
 8. Report evidence for each result: command, exit status, logs, environment and comparison against baseline. Never claim checks were run unless they were.
 ## Stages
@@ -21,4 +21,12 @@ Use this skill when migrating an existing Java 11 Spark/Scala application to a s
 - **Validate**: regression tests, integration, streaming recovery, performance and Go/No-Go.
 Use [validation reference](references/validation.md) for acceptance criteria.
 ## Outputs
-Create or update assessment, plan and validation reports in the target repository only when approved. Always distinguish observed facts, documented support and assumptions.
+Persist reports to an explicitly authorized report destination (dedicated reports directory or external artifact store). Do not write to the audited repository during a read-only audit unless that destination has been separately authorized. Always distinguish observed facts, documented support and assumptions.
+
+## Goal-driven execution contract
+A migration is a directed sequence of measurable goals. Each goal must declare: stable ID, objective, dependencies, preconditions, authorized actions, verifiable acceptance criteria, evidence, report path, report_write_authorized, rollback and approval gate.
+State transitions: PENDING -> READY -> RUNNING -> VALIDATING -> COMPLETED. Other states: BLOCKED, FAILED, WAITING_APPROVAL. Only mark COMPLETED after all acceptance criteria pass AND the report is persisted.
+At the start of each run, inspect prior reports and Git history, reconcile state, and select the next READY goal. Never blindly repeat destructive operations. Keep automation within authorized scope; request approval for edits, risky tests, merge, deployment and rollback.
+Every attempted goal MUST generate a Markdown report, including failures and blockers, containing: goal ID, objective, status, environment, actions, changed files, executed commands and results, acceptance checks, evidence links, risks, next goal and PR URL if any. Mark unexecuted checks NOT RUN. If persistence is not authorized or fails, mark BLOCKED and present the report for an approved destination; do not write to the audited repository. Do not fabricate results.
+For repository changes, create a dedicated branch and reviewable PR with its report. Do not merge without explicit approval. A technical goal passing does not imply PR approval.
+Use [goal protocol](references/goal-protocol.md) and [report template](references/report-template.md). Generate a final consolidated migration report only when all required goals and approval gates are satisfied.
