@@ -4,7 +4,7 @@
 - Objective: guide the coding assistant to add only missing tests for concrete
   critical dependency/JDK migration risks and retain before/after evidence.
 - Branch: `feature/05-targeted-jvm-regressions`
-- Base: `master` at `eb7564df73e57bf874767998872adb9f479ec6e8`
+- Base: `master` at `d06554882303156fc4dccb73af64d8d33158aca1`
 - Status: implementation and local distribution checks completed; ready for review.
 - Environment: managed Linux workspace, Python 3.12, Bash, Git and jsonschema 4.26.
 
@@ -17,7 +17,11 @@
 - Added NOT_RUN starter criteria to the state template's plan and validation
   goals and baseline-test preparation to the apply actions. The schema is unchanged.
 - Extended installer CI path filters to include modified skill and command content.
-- Prepared this change independently of the still-open goal-executor PR #4.
+- Integrated the checkpoint executor from merged PR #4. Corrected its treatment
+  of criterion evidence: schema-defined arrays are now iterated rather than
+  passed as a single path. Non-array evidence is rejected at both levels.
+- Added executor regression cases for valid/empty arrays, a missing later entry,
+  malformed evidence containers and a symlink escaping the project.
 
 ## Verification and evidence
 | Check / command | Result | Evidence |
@@ -27,6 +31,7 @@
 | Draft202012Validator schema check and state-template validation | PASS | Both completed without validation errors |
 | Fresh installation into temporary projects for all three harnesses | PASS | Installed guides/templates matched canonical bytes; new relative guide links resolved; regression commands existed for OpenCode/Claude |
 | `git diff --check` | PASS | No whitespace errors |
+| `python -m unittest discover -s tests -p 'test_goal_executor.py' -v` | PASS | 16 executor tests passed locally under Python 3.12 |
 | ShellCheck | NOT_RUN | Tool not installed in local workspace |
 | Command invocation in the three coding-assistant CLIs | NOT_RUN | No harness CLI invocation performed |
 | Actual Java 11/target JDK application regression runs | NOT_RUN | No target application supplied; no application tests or results fabricated |
@@ -44,8 +49,8 @@
 These are executable-agent instructions and templates, not an automatic test
 generator or runner. Their effectiveness on a real project and actual CLI discovery
 remain to be validated. Existing checkpoint files are not automatically changed.
-The existing executor is outside this change; no completion guarantees are claimed
-beyond its separately reviewed implementation. Remove/revert this change to recover
+The executor still verifies checkpoint files, not test semantics or evidence
+integrity. Remove/revert this change to recover
 the previous toolkit instructions; installed copies use the existing installer
 update/uninstall workflow and its local-modification protection.
 
