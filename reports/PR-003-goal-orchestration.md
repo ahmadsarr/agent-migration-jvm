@@ -30,3 +30,8 @@ Review contract and implement executor only after this MR is approved and merged
 - The five sample goals in the state template now provide these fields.
 - **Runtime report existence and evidence validity remain executor responsibilities.**
 - **Schema test execution: NOT RUN**; the changes are structural and still need validation against positive and negative fixtures.
+
+## README and provisioning boundary update
+- Expanded the root README with workflow, goals, evidence, schema, commands, limitations and operator-run installation instructions for OpenCode, Claude Code and Codex.
+- Clarified in the canonical skill and orchestration documentation that agents must not install, update or uninstall their own harness.
+- Documentation changes only; no live CLI discovery or migration execution tests performed.
