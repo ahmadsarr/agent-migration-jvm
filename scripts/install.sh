@@ -1,19 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
-usage(){ echo 'Usage: install.sh --harness opencode|claude|codex --target DIR [--action install|update|uninstall] [--dry-run]' >&2; }
-harness='' target='' action='install' dry=0
+usage(){ echo 'Usage: install.sh --harness opencode|claude|codex [--scope project|global] [--target DIR] [--action install|update|uninstall] [--dry-run]' >&2; }
+harness='' target='' scope='project' action='install' dry=0
 while (($#)); do
  case "$1" in
- --harness|--target|--action) (($#>=2)) || { usage; exit 2; }; case "$1" in --harness) harness=$2;; --target) target=$2;; --action) action=$2;; esac; shift 2;;
+ --harness|--target|--scope|--action) (($#>=2)) || { usage; exit 2; }; case "$1" in --harness) harness=$2;; --target) target=$2;; --scope) scope=$2;; --action) action=$2;; esac; shift 2;;
  --dry-run) dry=1; shift;; *) usage; exit 2;; esac
 done
 [[ $harness == opencode || $harness == claude || $harness == codex ]] || { usage; exit 2; }
 [[ $action == install || $action == update || $action == uninstall ]] || { usage; exit 2; }
-[[ -d $target && ! -L $target ]] || { echo 'Target directory does not exist' >&2; exit 2; }
-target=$(cd "$target" && pwd -P)
+[[ $scope == project || $scope == global ]] || { usage; exit 2; }
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 command -v sha256sum >/dev/null || { echo 'sha256sum required' >&2; exit 2; }
-manifest="$target/.jvm-migration/$harness.manifest"
+if [[ $scope == project ]]; then
+ target=${target:-$PWD}
+ [[ -d $target && ! -L $target ]] || { echo 'Target directory does not exist' >&2; exit 2; }
+ target=$(cd "$target" && pwd -P)
+ case "$harness" in
+  opencode) prefix='.opencode';;
+  claude) prefix='.claude';;
+  codex) prefix='.agents';;
+ esac
+ manifest_rel=".jvm-migration/$harness.manifest"
+ display_target=$target
+else
+ [[ -z $target ]] || { echo '--target cannot be combined with --scope global' >&2; exit 2; }
+ [[ ${HOME:-} == /* && -d $HOME ]] || { echo 'Global installation requires an absolute existing HOME' >&2; exit 2; }
+ case "$harness" in
+  opencode) config_root="${XDG_CONFIG_HOME:-$HOME/.config}/opencode";;
+  claude) config_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}";;
+  codex) config_root="$HOME/.agents";;
+ esac
+ # Keep global paths lexical so preflight can reject symlinked ancestors.
+ [[ $config_root == /* && $config_root != *'..'* && $config_root != *$'\n'* && $config_root != *$'\t'* ]] || { echo 'Invalid global configuration path' >&2; exit 2; }
+ config_root=${config_root%/}
+ [[ $config_root != '' && $config_root != / ]] || { echo 'Global configuration cannot be filesystem root' >&2; exit 2; }
+ target='/'
+ prefix=${config_root#/}
+ manifest_rel="$prefix/.jvm-migration/$harness.manifest"
+ display_target=$config_root
+fi
+manifest="$target/$manifest_rel"
 check_ancestors() {
   local path="$target" component
   local -a parts
@@ -27,12 +54,12 @@ check_ancestors() {
 declare -a sources=() dests=() hashes=() previous_paths=() previous_hashes=()
 map_dir(){ local src=$1 prefix=$2 file rel; [[ -d $root/$src ]] || { echo "Missing source $src" >&2; exit 2; }; while IFS= read -r -d '' file; do rel=${file#"$root/$src/"}; sources+=("$file"); dests+=("$prefix/$rel"); hashes+=("$(sha256sum "$file" | cut -d' ' -f1)"); done < <(find "$root/$src" -type f -print0 | sort -z); }
 case "$harness" in
- opencode) map_dir skills/jvm-spark-migration .opencode/skills/jvm-spark-migration; map_dir commands .opencode/commands;;
- claude) map_dir .claude/skills/jvm-spark-migration .claude/skills/jvm-spark-migration; map_dir .claude/commands .claude/commands; map_dir .claude/agents .claude/agents;;
- codex) map_dir .agents/skills/jvm-spark-migration .agents/skills/jvm-spark-migration;;
+ opencode) map_dir skills/jvm-spark-migration "$prefix/skills/jvm-spark-migration"; map_dir commands "$prefix/commands";;
+ claude) map_dir .claude/skills/jvm-spark-migration "$prefix/skills/jvm-spark-migration"; map_dir .claude/commands "$prefix/commands"; map_dir .claude/agents "$prefix/agents";;
+ codex) map_dir .agents/skills/jvm-spark-migration "$prefix/skills/jvm-spark-migration";;
 esac
 if [[ -f $manifest ]]; then
- while IFS=$'\t' read -r hash path; do [[ $hash =~ ^[a-f0-9]{64}$ && $path != /* && $path != *'..'* ]] || { echo 'Invalid manifest' >&2; exit 2; }; previous_hashes+=("$hash"); previous_paths+=("$path"); done < "$manifest"
+ while IFS=$'\t' read -r hash path; do [[ $hash =~ ^[a-f0-9]{64}$ && $path != /* && $path != *'..'* && $path == "$prefix/"* ]] || { echo 'Invalid manifest' >&2; exit 2; }; previous_hashes+=("$hash"); previous_paths+=("$path"); done < "$manifest"
 fi
 old_hash(){ local i; REPLY=''; for i in "${!previous_paths[@]}"; do if [[ ${previous_paths[i]} == "$1" ]]; then REPLY=${previous_hashes[i]}; return; fi; done; }
 conflict=0
@@ -45,7 +72,7 @@ for i in "${!dests[@]}"; do
  elif [[ -n $old && $action == update ]]; then echo "Conflict (locally deleted): $path" >&2; conflict=1
  fi
 done
-check_ancestors ".jvm-migration/$harness.manifest" || conflict=1
+check_ancestors "$manifest_rel" || conflict=1
 if [[ $action == install && -f $manifest ]]; then echo 'Already installed: use --action update' >&2; conflict=1; fi
 if [[ $action != install && ! -f $manifest ]]; then echo 'No installation manifest' >&2; conflict=1; fi
 if [[ $action == uninstall || $action == update ]]; then
@@ -56,7 +83,7 @@ if [[ $action == uninstall || $action == update ]]; then
 fi
 ((conflict==0)) || { echo 'Aborted before writing any file.' >&2; exit 3; }
 if ((dry)); then
- echo "DRY RUN: $action for $harness at $target"
+ echo "DRY RUN: $action for $harness ($scope) at $display_target"
  for path in "${dests[@]}"; do [[ $action == uninstall ]] || echo "Would install: $path"; done
  if [[ $action == uninstall ]]; then for path in "${previous_paths[@]}"; do echo "Would remove: $path"; done; fi
  exit 0
@@ -106,4 +133,4 @@ for i in "${!dests[@]}"; do mkdir -p "$(dirname "$target/${dests[i]}")"; cp -- "
 : > "$manifest"
 for i in "${!dests[@]}"; do printf '%s\t%s\n' "${hashes[i]}" "${dests[i]}" >> "$manifest"; done
 committed=1
-echo "$action complete for $harness"
+echo "$action complete for $harness ($scope) at $display_target"

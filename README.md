@@ -52,8 +52,25 @@ for installation, examples, retries and execution reports.
   Maven/Gradle/SBT setup are needed for baseline execution; the supported target
   JDK is selected after the compatibility assessment.
 
-The toolkit installer installs project-local instructions and commands. OpenCode,
+The toolkit installer installs project-local or user-global instructions and commands. OpenCode,
 JDKs, build tools and application dependencies are installed separately.
+
+### Installation globale ou projet courant
+
+Depuis le checkout du toolkit, définir `toolkit_dir="$PWD"`. Puis choisir :
+
+```bash
+# Dans le terminal situé à la racine du projet :
+bash "$toolkit_dir/scripts/install.sh" --harness opencode --scope project
+
+# Pour tous les projets du compte utilisateur :
+bash "$toolkit_dir/scripts/install.sh" --harness opencode --scope global
+```
+
+Ajouter `--dry-run` pour prévisualiser. `project` est le défaut ; sans `--target`,
+le script utilise le répertoire courant. `--target` reste compatible avec les
+anciens appels mais ne se combine pas avec `global`. Remplacer `opencode` par
+`claude` ou `codex` au besoin. Voir les [emplacements et la maintenance par portée](docs/harness-installation.md).
 
 ### 1. Install the toolkit into the application
 

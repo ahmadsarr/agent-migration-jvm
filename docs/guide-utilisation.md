@@ -62,6 +62,12 @@ compatibilité JDK/framework, Jakarta, Security, JPA et tests HTTP/JSON ciblés.
 
 ### 1. Installer les instructions
 
+Choisir une installation projet (ci-dessous) ou une installation utilisateur
+avec `bash "$toolkit_dir/scripts/install.sh" --harness opencode --scope global`.
+Pour le projet courant, utiliser `--scope project` sans `--target` depuis sa racine.
+Voir les [portées et emplacements](harness-installation.md). Les rapports restent
+propres à chaque projet, même avec une installation globale.
+
 ```bash
 bash "$toolkit_dir/scripts/install.sh" --harness opencode --target "$project_dir" --dry-run
 bash "$toolkit_dir/scripts/install.sh" --harness opencode --target "$project_dir"
