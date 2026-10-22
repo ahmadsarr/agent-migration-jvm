@@ -13,6 +13,7 @@ import sys
 import uuid
 
 
+TOOLKIT_VERSION = (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip()
 SPEC_KIT_VERSION = "1.2.2"
 STAGES = ("constitution", "specify", "plan", "tasks", "analyze", "implement", "converge")
 CONTEXT = """Use the project's existing instructions and jvm-spark-migration skill if available.
@@ -218,7 +219,7 @@ def execute(args):
     runs.mkdir(parents=True, exist_ok=True)
     run_dir = runs / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ-") + uuid.uuid4().hex[:12])
     run_dir.mkdir()
-    report = {"project": str(root), "feature": feature, "spec_kit_version": version,
+    report = {"toolkit_version": TOOLKIT_VERSION, "project": str(root), "feature": feature, "spec_kit_version": version,
               "status": "RUNNING", "review_required": True, "git_head_before": git_head(root), "steps": []}
     report_path = run_dir / "report.json"
 
@@ -276,6 +277,7 @@ def execute(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--version", action="version", version=TOOLKIT_VERSION)
     parser.add_argument("--project", required=True, type=Path)
     parser.add_argument("--model", help="OpenCode provider/model identifier; otherwise use its configured model")
     parser.add_argument("--timeout", type=float, default=900, help="Maximum seconds per subprocess")

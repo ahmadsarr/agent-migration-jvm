@@ -80,6 +80,13 @@ Le manifeste `.jvm-migration/<assistant>.manifest` contient les chemins et
 empreintes SHA-256 des fichiers gérés. L'installation ne crée pas le checkpoint
 `migration/state.json` et ne modifie pas les sources de l'application.
 
+## Version installée
+
+Utiliser `--action status` avec la même portée pour consulter la version et
+contrôler les fichiers gérés, sans les modifier. `bash scripts/install.sh --version`
+affiche la version du checkout. Voir le [guide des versions](versioning.md) pour
+les installations anciennes et la sélection d'une version publiée.
+
 ## Maintenance
 
 Garder la même portée et les mêmes variables de configuration que lors de

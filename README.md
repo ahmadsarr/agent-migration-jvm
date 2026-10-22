@@ -22,6 +22,21 @@ L'assistant travaille dans votre application avec ses outils de build et de test
 Spec Kit structure une fonctionnalité ; le validateur de checkpoints contrôle les
 preuves enregistrées. Aucun de ces éléments ne suffit à déclarer une migration réussie.
 
+## Version du toolkit
+
+La version est centralisée dans [`VERSION`](VERSION). Consulter le
+[guide des versions](docs/versioning.md) et le [changelog](CHANGELOG.md).
+
+```bash
+bash scripts/install.sh --version
+bash scripts/install.sh --harness opencode --target /chemin/application --action status
+bash scripts/install.sh --harness opencode --scope global --action status
+```
+
+Les installations anciennes affichent une version inconnue jusqu'à leur mise à
+jour. La première version `0.1.0` est préparée ; son tag et sa release ne sont pas
+encore publiés.
+
 ## Workflow
 1. Audit existing runtime, dependencies, Spark, Scala and build tooling.
 2. Determine a supported target JDK from verified compatibility evidence.
