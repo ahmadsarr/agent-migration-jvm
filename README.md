@@ -2,6 +2,25 @@
 
 Toolkit for planning and validating migrations from Java 11 to a compatible target JDK for Java, Scala and Apache Spark applications.
 
+## Guide d'utilisation
+
+**Commencer ici : [guide complet en français](docs/guide-utilisation.md).**
+La documentation est versionnée avec le code, comme un wiki dans le dépôt.
+
+| Votre objectif | Documentation |
+|---|---|
+| Migrer une application JVM avec OpenCode | [Parcours migration](docs/guide-utilisation.md#migration) |
+| Développer une évolution avec Spec Kit | [Parcours Spec Kit](docs/guide-utilisation.md#speckit) |
+| Installer pour OpenCode, Claude Code ou Codex | [Installation et maintenance](docs/harness-installation.md) |
+| Protéger les comportements après une mise à jour critique | [Tests de régression](docs/guide-utilisation.md#regressions) |
+| Comprendre les fichiers et statuts | [Rapports et checkpoints](docs/guide-utilisation.md#rapports) |
+| Reprendre après une erreur | [Dépannage](docs/guide-utilisation.md#depannage) |
+
+Le toolkit fournit des instructions, des modèles et des scripts d'orchestration.
+L'assistant travaille dans votre application avec ses outils de build et de test.
+Spec Kit structure une fonctionnalité ; le validateur de checkpoints contrôle les
+preuves enregistrées. Aucun de ces éléments ne suffit à déclarer une migration réussie.
+
 ## Workflow
 1. Audit existing runtime, dependencies, Spark, Scala and build tooling.
 2. Determine a supported target JDK from verified compatibility evidence.
