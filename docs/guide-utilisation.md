@@ -57,6 +57,9 @@ migration applicative. Conserver ces variables dans le terminal ou les redéfini
 <a id="migration"></a>
 ## Migrer une application avec OpenCode
 
+Pour Spring ou Spring Boot, suivre aussi le [parcours Spring](spring-jvm-migration.md) :
+compatibilité JDK/framework, Jakarta, Security, JPA et tests HTTP/JSON ciblés.
+
 ### 1. Installer les instructions
 
 ```bash
