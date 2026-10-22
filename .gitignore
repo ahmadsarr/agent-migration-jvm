@@ -4,3 +4,5 @@ target/
 build/
 *.class
 *.log
+__pycache__/
+*.pyc
