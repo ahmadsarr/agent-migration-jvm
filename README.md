@@ -16,6 +16,12 @@ Command files are prompt templates; slash-command registration depends on the co
 
 ## Use with OpenCode
 
+To automate the Spec Kit workflow through OpenCode, use
+[`scripts/speckit_opencode.py`](scripts/speckit_opencode.py). It initializes
+Spec Kit, prepares specifications, plans and tasks, and runs implementation on
+explicit invocation. See the [step-by-step guide](docs/speckit-opencode.md)
+for installation, examples, retries and execution reports.
+
 ### Prerequisites
 
 - Install [OpenCode](https://opencode.ai/docs/) and configure a model provider.
@@ -36,9 +42,6 @@ Keep the toolkit checkout separate from the application checkout. From a termina
 ```bash
 git clone https://github.com/ahmadsarr/agent-migration-jvm.git
 cd agent-migration-jvm
-
-# Until PR #5 is merged, select its branch to include /regressions.
-git switch feature/05-targeted-jvm-regressions
 
 toolkit_dir="$PWD"
 project_dir="/absolute/path/to/your-application"
