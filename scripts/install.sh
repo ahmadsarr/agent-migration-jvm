@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-usage(){ echo 'Usage: install.sh --harness opencode|claude|codex [--scope project|global] [--target DIR] [--action install|update|uninstall] [--dry-run]' >&2; }
+usage(){ echo 'Usage: install.sh --harness opencode|claude|codex [--scope project|global] [--target DIR] [--action install|update|uninstall|status] [--dry-run]' >&2; }
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+[[ -f $root/VERSION ]] || { echo 'Missing toolkit VERSION' >&2; exit 2; }
+toolkit_version=$(cat "$root/VERSION")
+[[ $toolkit_version =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Invalid toolkit VERSION (expected MAJOR.MINOR.PATCH)' >&2; exit 2; }
+if [[ $# == 1 && $1 == --version ]]; then echo "$toolkit_version"; exit 0; fi
 harness='' target='' scope='project' action='install' dry=0
 while (($#)); do
  case "$1" in
@@ -8,9 +13,8 @@ while (($#)); do
  --dry-run) dry=1; shift;; *) usage; exit 2;; esac
 done
 [[ $harness == opencode || $harness == claude || $harness == codex ]] || { usage; exit 2; }
-[[ $action == install || $action == update || $action == uninstall ]] || { usage; exit 2; }
+[[ $action == install || $action == update || $action == uninstall || $action == status ]] || { usage; exit 2; }
 [[ $scope == project || $scope == global ]] || { usage; exit 2; }
-root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 command -v sha256sum >/dev/null || { echo 'sha256sum required' >&2; exit 2; }
 if [[ $scope == project ]]; then
  target=${target:-$PWD}
@@ -58,6 +62,10 @@ case "$harness" in
  claude) map_dir .claude/skills/jvm-spark-migration "$prefix/skills/jvm-spark-migration"; map_dir .claude/commands "$prefix/commands"; map_dir .claude/agents "$prefix/agents";;
  codex) map_dir .agents/skills/jvm-spark-migration "$prefix/skills/jvm-spark-migration";;
 esac
+version_rel="$prefix/skills/jvm-spark-migration/TOOLKIT_VERSION"
+sources+=("$root/VERSION")
+dests+=("$version_rel")
+hashes+=("$(sha256sum "$root/VERSION" | cut -d' ' -f1)")
 if [[ -f $manifest ]]; then
  while IFS=$'\t' read -r hash path; do [[ $hash =~ ^[a-f0-9]{64}$ && $path != /* && $path != *'..'* && $path == "$prefix/"* ]] || { echo 'Invalid manifest' >&2; exit 2; }; previous_hashes+=("$hash"); previous_paths+=("$path"); done < "$manifest"
 fi
@@ -69,21 +77,35 @@ for i in "${!dests[@]}"; do
  if [[ -e $target/$path ]]; then
   actual=$(sha256sum "$target/$path" | cut -d' ' -f1)
   if [[ -z $old || $actual != "$old" ]]; then echo "Conflict (unmanaged or modified): $path" >&2; conflict=1; fi
- elif [[ -n $old && $action == update ]]; then echo "Conflict (locally deleted): $path" >&2; conflict=1
+ elif [[ -n $old && $action != install ]]; then echo "Conflict (locally deleted): $path" >&2; conflict=1
  fi
 done
 check_ancestors "$manifest_rel" || conflict=1
 if [[ $action == install && -f $manifest ]]; then echo 'Already installed: use --action update' >&2; conflict=1; fi
 if [[ $action != install && ! -f $manifest ]]; then echo 'No installation manifest' >&2; conflict=1; fi
-if [[ $action == uninstall || $action == update ]]; then
+if [[ $action == uninstall || $action == update || $action == status ]]; then
  for i in "${!previous_paths[@]}"; do
   path=${previous_paths[i]}; check_ancestors "$path" || { conflict=1; continue; }; [[ -f $target/$path && ! -L $target/$path ]] && actual=$(sha256sum "$target/$path" | cut -d' ' -f1) || actual='MISSING'
   if [[ $actual != "${previous_hashes[i]}" ]]; then echo "Conflict (modified or missing): $path" >&2; conflict=1; fi
  done
 fi
+if [[ $action == status ]]; then
+ echo "Toolkit source version: $toolkit_version"
+ if [[ -f $manifest ]]; then
+  old_hash "$version_rel"
+  if [[ -n $REPLY && -f $target/$version_rel && ! -L $target/$version_rel ]]; then
+   echo "Installed version: $(cat "$target/$version_rel")"
+  else
+   echo 'Installed version: UNKNOWN (legacy installation or missing version marker)'
+  fi
+  echo "Scope: $scope; assistant: $harness; location: $display_target"
+ fi
+ ((conflict==0)) || { echo 'Installation has conflicts; version information is not an integrity guarantee.' >&2; exit 3; }
+ exit 0
+fi
 ((conflict==0)) || { echo 'Aborted before writing any file.' >&2; exit 3; }
 if ((dry)); then
- echo "DRY RUN: $action for $harness ($scope) at $display_target"
+ echo "DRY RUN: $action for $harness ($scope) at $display_target; toolkit $toolkit_version"
  for path in "${dests[@]}"; do [[ $action == uninstall ]] || echo "Would install: $path"; done
  if [[ $action == uninstall ]]; then for path in "${previous_paths[@]}"; do echo "Would remove: $path"; done; fi
  exit 0
@@ -133,4 +155,4 @@ for i in "${!dests[@]}"; do mkdir -p "$(dirname "$target/${dests[i]}")"; cp -- "
 : > "$manifest"
 for i in "${!dests[@]}"; do printf '%s\t%s\n' "${hashes[i]}" "${dests[i]}" >> "$manifest"; done
 committed=1
-echo "$action complete for $harness ($scope) at $display_target"
+echo "$action complete for $harness ($scope) at $display_target; toolkit $toolkit_version"

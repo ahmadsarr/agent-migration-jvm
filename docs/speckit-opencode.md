@@ -103,6 +103,10 @@ tools or writing files; it cannot simulate artifacts from later stages.
 
 ## Reports and limits
 
+New reports include `toolkit_version`, identifying the wrapper checkout, separately
+from `spec_kit_version`. Run `python3 scripts/speckit_opencode.py --version` to
+inspect it; see [toolkit versioning](versioning.md).
+
 Each execution prints its report location under
 `.jvm-migration/speckit-runs/<timestamp>-<id>/`. It contains `report.json`, per-stage
 `stdout.jsonl` (plain `stdout.log` for init), and `stderr.log`. Reports include

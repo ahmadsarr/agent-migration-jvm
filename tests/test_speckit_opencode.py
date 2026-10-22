@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-from scripts.speckit_opencode import STAGES
+from scripts.speckit_opencode import STAGES, TOOLKIT_VERSION
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/speckit_opencode.py"
@@ -101,6 +101,7 @@ class SpecKitOpenCodeTest(unittest.TestCase):
             self.assertNotIn('--auto', call['args'])
         report = self.reports()[0]
         self.assertEqual(report['status'], 'RETURNED_REVIEW_REQUIRED')
+        self.assertEqual(report['toolkit_version'], TOOLKIT_VERSION)
         self.assertTrue(report['review_required'])
         self.assertEqual(len(report['steps']), 4)
         self.assertIn(self.feature+'/tasks.md', report['steps'][2]['artifacts_after'])
