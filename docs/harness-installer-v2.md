@@ -1,5 +1,5 @@
 # Harness installer — MR #2
-Requires Bash, sha256sum, find and coreutils. Run from a checkout of this repository.
+Requires Bash, sha256sum, find and coreutils. See [installation scopes](harness-installation.md) for project/current-directory and user-global installation. Existing explicit `--target` invocations remain supported.
 
 ```bash
 bash scripts/install.sh --harness opencode --target /path/to/project --dry-run
