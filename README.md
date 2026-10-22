@@ -1,6 +1,6 @@
 # Agent Migration JVM
 
-Toolkit for planning and validating migrations from Java 11 to a compatible target JDK for Java, Scala and Apache Spark applications.
+Toolkit for planning and validating migrations from Java 11 to a compatible target JDK for Java, Spring/Spring Boot, Scala and Apache Spark applications.
 
 ## Guide d'utilisation
 
@@ -10,6 +10,7 @@ La documentation est versionnée avec le code, comme un wiki dans le dépôt.
 | Votre objectif | Documentation |
 |---|---|
 | Migrer une application JVM avec OpenCode | [Parcours migration](docs/guide-utilisation.md#migration) |
+| Migrer une application Spring / Spring Boot | [Parcours Spring](docs/spring-jvm-migration.md) |
 | Développer une évolution avec Spec Kit | [Parcours Spec Kit](docs/guide-utilisation.md#speckit) |
 | Installer pour OpenCode, Claude Code ou Codex | [Installation et maintenance](docs/harness-installation.md) |
 | Protéger les comportements après une mise à jour critique | [Tests de régression](docs/guide-utilisation.md#regressions) |

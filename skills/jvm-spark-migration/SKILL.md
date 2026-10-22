@@ -1,9 +1,9 @@
 ---
 name: jvm-spark-migration
-description: Audit and guide Java 11 upgrades to Java 17, 21 or 25 for Java, Scala and Apache Spark applications. Use for JVM compatibility, migration planning, build changes, Spark runtime checks and regression validation; not for unrelated refactoring.
+description: Audit and guide Java 11 upgrades to Java 17, 21 or 25 for Java, Spring/Spring Boot, Scala and Apache Spark applications. Use for JVM compatibility, migration planning, build changes, Spark runtime checks and regression validation; not for unrelated refactoring.
 ---
-# JVM / Spark migration
-Use this skill when migrating an existing Java 11 Spark/Scala application to a supported target JDK.
+# JVM / Spring / Spark migration
+Use this skill when migrating an existing Java 11 application (plain Java, Spring/Spring Boot or Spark/Scala) to a supported target JDK. Apply only the framework checks relevant to the detected application.
 ## Operating rules
 1. First inspect the actual repository; do not guess versions or compatibility.
 2. Collect Java, Scala, Spark, Maven/SBT/Gradle, connectors, plugins, transitive dependencies, JVM flags, Docker images, CI and driver/executor runtime details.
@@ -20,6 +20,13 @@ Use this skill when migrating an existing Java 11 Spark/Scala application to a s
 - **Apply**: one approved batch on a separate branch, no unrelated edits.
 - **Validate**: regression tests, integration, streaming recovery, performance and Go/No-Go.
 Use [validation reference](references/validation.md) for acceptance criteria.
+## Spring and Spring Boot
+When Spring is detected, read [Spring migration](references/spring-migration.md).
+Audit the actual framework/BOM, Security, Data/ORM and Cloud versions. Distinguish
+a JDK-only upgrade from a framework major upgrade, verify the supported combination,
+and select targeted startup, HTTP, security, persistence and serialization checks.
+Spring-only applications do not require Spark or Scala validation.
+
 ## Targeted regression coverage
 For each migration batch affecting critical dependencies or JDK-sensitive behavior,
 use [targeted regressions](references/targeted-regressions.md). Trace actual usages,
