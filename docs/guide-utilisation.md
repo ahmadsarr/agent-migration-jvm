@@ -354,7 +354,7 @@ ni les spécifications.
 |---|---|
 | Commandes OpenCode absentes | Relancer depuis la racine cible et vérifier `.opencode/commands/` |
 | Skill non chargé | Vérifier son `SKILL.md`, les permissions de skills et demander explicitement son chargement |
-| Référence du skill introuvable | Les anciennes références de compatibilité, validation et protocole sont sous `.agents/skills/jvm-spark-migration/references/` dans le checkout du toolkit ; fournir ce chemin à l'assistant |
+| Référence du skill introuvable | Mettre à jour l’installation avec `--action update` : les références sont désormais distribuées dans `references/` pour les trois assistants |
 | `specify` ou `opencode` introuvable | Vérifier l'installation et le `PATH` du terminal |
 | Version Spec Kit refusée | Utiliser `specify-cli==1.2.2` pour le wrapper actuel |
 | `init` refuse `.specify` existant | Examiner et utiliser l'installation existante ; ne pas réinitialiser par-dessus |

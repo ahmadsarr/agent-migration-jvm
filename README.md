@@ -47,6 +47,16 @@ encore publiés.
 
 Canonical skill: `skills/jvm-spark-migration/SKILL.md` (mirrored for Codex and Claude Code). All copies share the goal execution and mandatory reporting contract. See `commands/` for generic templates and `.claude/commands/` for Claude-specific commands.
 
+Pour contribuer au skill, modifier uniquement `skills/jvm-spark-migration/`, puis :
+
+```bash
+python3 scripts/sync_skills.py
+python3 scripts/sync_skills.py --check
+```
+
+Le check CI compare les miroirs Codex/Claude avec la source et échoue en cas de
+dérive. Voir [la génération des miroirs](docs/skill-mirrors.md).
+
 Command files are prompt templates; slash-command registration depends on the coding assistant.
 
 ## Use with OpenCode
@@ -226,12 +236,10 @@ your changes and resolve the reported conflict before retrying; there is no
 - If commands are absent, restart OpenCode from the application root and check
   `.opencode/commands/`. If the skill is absent, check its `SKILL.md` and OpenCode's
   skill permissions. You can also ask the assistant to read that file directly.
-- Keep the toolkit checkout accessible. The OpenCode package currently includes
-  the regression references, but the canonical skill's older compatibility,
-  validation, goal-protocol and report-template references are not bundled there.
-  Direct the assistant to `.agents/skills/jvm-spark-migration/references/` in the
-  toolkit checkout for those files, and to its `migration/README.md` for the
-  orchestration link. Do not guess the contents of a missing reference.
+- The installed skill includes its compatibility, validation, reporting and
+  orchestration references for all three assistants. Update older installations
+  with `--action update` to receive them. Keep the toolkit checkout accessible
+  for checkpoint templates, schemas and execution scripts, which are separate.
 - Installer file distribution has been checked locally. Discovery and command
   execution in a real OpenCode session still need validation against your installed
   version; no end-to-end migration is claimed by installing the toolkit.

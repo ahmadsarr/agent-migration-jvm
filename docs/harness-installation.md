@@ -116,5 +116,6 @@ L'installation n'est pas transactionnelle : une erreur d'entrée/sortie peut lai
 des copies partielles. Les limites concernant les liens symboliques et les
 modifications concurrentes sont détaillées dans la [référence installateur](harness-installer-v2.md).
 La présence des fichiers ne prouve pas leur découverte par votre version de CLI.
-Pour les références du skill non distribuées, voir le
-[dépannage](guide-utilisation.md#depannage).
+Toutes les références Markdown du skill sont distribuées depuis la
+[source unique et ses miroirs](skill-mirrors.md). Mettre à jour les anciennes
+installations pour recevoir les références auparavant manquantes.

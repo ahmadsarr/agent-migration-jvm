@@ -1,0 +1,36 @@
+name: Skill mirror consistency
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - '.agents/skills/**'
+      - '.claude/skills/**'
+      - 'scripts/sync_skills.py'
+      - 'scripts/install.sh'
+      - 'tests/test_sync_skills.py'
+      - '.github/workflows/skill-mirrors.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'skills/**'
+      - '.agents/skills/**'
+      - '.claude/skills/**'
+      - 'scripts/sync_skills.py'
+      - 'scripts/install.sh'
+      - 'tests/test_sync_skills.py'
+      - '.github/workflows/skill-mirrors.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Diff mirrors against canonical skill (read-only)
+        run: python scripts/sync_skills.py --check
+      - name: Generator and installed reference tests
+        run: python -m unittest discover -s tests -p 'test_sync_skills.py' -v
