@@ -4,6 +4,8 @@
 
 - Parcours de migration JVM pour Java, Spring/Spring Boot, Scala et Spark.
 - Instructions et références distribuées pour OpenCode, Claude Code et Codex.
+- Source unique du skill, génération des miroirs et contrôle CI de dérive ;
+  références complètes et liens locaux valides après installation.
 - Installation projet ou globale, mise à jour et désinstallation avec manifestes.
 - Workflow de régressions ciblées et validateur de checkpoints.
 - Orchestration Spec Kit via OpenCode, rapports et guide d'utilisation.
