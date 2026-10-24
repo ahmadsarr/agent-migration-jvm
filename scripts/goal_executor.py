@@ -43,6 +43,13 @@ def inspect(root, state):
     by_id = {g["id"]: g for g in goals}
     if len(by_id) != len(goals):
         raise Blocked("Duplicate goal ID")
+    # Validate the dependency graph independently of recorded completion status.
+    remaining = {key: set(goal.get("dependencies", [])) for key, goal in by_id.items()}
+    while remaining:
+        ready = {key for key, deps in remaining.items() if not deps}
+        if not ready:
+            raise Blocked("Cyclic or missing goal dependencies")
+        remaining = {key: deps - ready for key, deps in remaining.items() if key not in ready}
     for g in goals:
         for dep in g.get("dependencies", []):
             if dep not in by_id:

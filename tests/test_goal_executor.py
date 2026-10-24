@@ -29,6 +29,19 @@ class GoalExecutorTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_completed_self_dependency_rejected(self):
+        self.goal["status"] = "COMPLETED"
+        self.goal["dependencies"] = ["GOAL-001"]
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
+    def test_completed_cycle_rejected(self):
+        self.goal["status"] = "COMPLETED"
+        self.goal["dependencies"] = ["GOAL-002"]
+        self.state["goals"].append(dict(self.goal, id="GOAL-002", dependencies=["GOAL-001"]))
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
     def test_success(self):
         self.assertTrue(complete(self.root, self.state, "GOAL-001"))
         self.assertEqual(self.goal["status"], "COMPLETED")
