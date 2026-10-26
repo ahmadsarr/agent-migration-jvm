@@ -111,7 +111,8 @@
               ],
               "properties": {
                 "criterion": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "\\S"
                 },
                 "result": {
                   "enum": [
