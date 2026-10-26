@@ -64,6 +64,8 @@ def verify_completed(root, goal):
     checks = goal.get("acceptance", [])
     if not checks or any(c.get("result") != "PASS" for c in checks):
         raise Blocked(goal["id"] + ": acceptance criteria not all PASS")
+    if any(not isinstance(c.get("criterion"), str) or not c["criterion"].strip() for c in checks):
+        raise Blocked(goal["id"] + ": acceptance criterion must be nonempty text")
     report = inside(root, goal.get("report"))
     if not report.is_file() or not report.stat().st_size:
         raise Blocked(goal["id"] + ": persisted report missing or empty")

@@ -42,6 +42,25 @@ class GoalExecutorTest(unittest.TestCase):
         with self.assertRaises(Blocked):
             inspect(self.root, self.state)
 
+    def test_unnamed_acceptance_cannot_complete(self):
+        for criterion in (None, "", "   ", 42):
+            with self.subTest(criterion=criterion):
+                self.goal["acceptance"] = [{"result": "PASS", "criterion": criterion}]
+                with self.assertRaises(Blocked):
+                    complete(self.root, self.state, "GOAL-001")
+                self.assertEqual(self.goal["status"], "VALIDATING")
+
+    def test_missing_acceptance_name_cannot_complete(self):
+        self.goal["acceptance"] = [{"result": "PASS"}]
+        with self.assertRaises(Blocked):
+            complete(self.root, self.state, "GOAL-001")
+
+    def test_completed_unnamed_acceptance_rejected(self):
+        self.goal["status"] = "COMPLETED"
+        self.goal["acceptance"] = [{"result": "PASS", "criterion": ""}]
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
     def test_success(self):
         self.assertTrue(complete(self.root, self.state, "GOAL-001"))
         self.assertEqual(self.goal["status"], "COMPLETED")
