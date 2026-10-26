@@ -15,7 +15,7 @@ A completion attempt is refused unless:
 - dependencies are complete;
 - the goal is READY or VALIDATING;
 - report persistence is explicitly authorized;
-- every acceptance check is PASS and at least one check exists;
+- every acceptance check is PASS, names a nonblank textual criterion, and at least one check exists;
 - a nonempty report and all local evidence paths exist within the project.
 
 Both `goal.evidence` and `acceptance[].evidence` use arrays of project-relative
