@@ -42,6 +42,21 @@ class GoalExecutorTest(unittest.TestCase):
         with self.assertRaises(Blocked):
             inspect(self.root, self.state)
 
+    def test_blank_report_cannot_complete(self):
+        for content in ("", " ", "\n\t\r "):
+            with self.subTest(content=content):
+                self.goal["status"] = "VALIDATING"
+                (self.root / self.goal["report"]).write_text(content)
+                with self.assertRaises(Blocked):
+                    complete(self.root, self.state, "GOAL-001")
+                self.assertEqual(self.goal["status"], "VALIDATING")
+
+    def test_completed_blank_report_rejected(self):
+        self.goal["status"] = "COMPLETED"
+        (self.root / self.goal["report"]).write_text(" \n")
+        with self.assertRaises(Blocked):
+            inspect(self.root, self.state)
+
     def test_success(self):
         self.assertTrue(complete(self.root, self.state, "GOAL-001"))
         self.assertEqual(self.goal["status"], "COMPLETED")
