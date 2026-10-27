@@ -16,7 +16,7 @@ A completion attempt is refused unless:
 - the goal is READY or VALIDATING;
 - report persistence is explicitly authorized;
 - every acceptance check is PASS and at least one check exists;
-- a nonempty report and all local evidence paths exist within the project.
+- a report containing at least one non-whitespace byte and all local evidence paths exist within the project.
 
 Both `goal.evidence` and `acceptance[].evidence` use arrays of project-relative
 paths, as defined in the state schema. Every referenced file is checked, including
