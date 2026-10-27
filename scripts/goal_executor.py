@@ -30,6 +30,8 @@ def inside(root, relative):
 
 
 def inspect(root, state):
+    if not isinstance(state, dict):
+        raise Blocked("State must be an object")
     if state.get("schemaVersion") != 1:
         raise Blocked("Unsupported state version")
     saved = state.get("repository", {})
@@ -40,6 +42,8 @@ def inspect(root, state):
     goals = state.get("goals")
     if not isinstance(goals, list):
         raise Blocked("Invalid goals collection")
+    if any(not isinstance(g, dict) for g in goals):
+        raise Blocked("Each goal must be an object")
     by_id = {g["id"]: g for g in goals}
     if len(by_id) != len(goals):
         raise Blocked("Duplicate goal ID")

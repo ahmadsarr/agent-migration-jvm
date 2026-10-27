@@ -42,6 +42,23 @@ class GoalExecutorTest(unittest.TestCase):
         with self.assertRaises(Blocked):
             inspect(self.root, self.state)
 
+    def test_malformed_state_shapes_fail_closed_in_cli(self):
+        import sys
+        script = Path(__file__).resolve().parents[1] / "scripts/goal_executor.py"
+        for state in (None, [], 1, "invalid", dict(self.state, goals=[None]),
+                      dict(self.state, goals=[[]])):
+            with self.subTest(state=state):
+                path = self.root / "state.json"
+                original = json.dumps(state)
+                path.write_text(original)
+                result = subprocess.run([sys.executable, str(script), "--project", str(self.root),
+                                         "--state", "state.json", "status"],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("BLOCKED:", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertEqual(path.read_text(), original)
+
     def test_success(self):
         self.assertTrue(complete(self.root, self.state, "GOAL-001"))
         self.assertEqual(self.goal["status"], "COMPLETED")
